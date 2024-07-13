@@ -1,6 +1,6 @@
-# Airline Flight Delay Prediction Using Machine Learning Models
+# Flight Delay Prediction Using Machine Learning Model
 
-The Machine Learning model aims to predict the flights being delayed at John F. Kennedy International Airport (JFK). The goal is to manage crowded situations at airports, which cause financial difficulties for the airline industry.
+The project aims to build a machine learning model, that aims to predict the flights being delayed at John F. Kennedy International Airport (JFK). The goal is to manage crowded situations at airports, which cause financial difficulties for the airline industry.
 
 ## Data Source
 
