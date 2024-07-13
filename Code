@@ -1,0 +1,91 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
+# Load the data
+data = pd.read_csv('M1_final.csv')
+
+# Preprocess the data
+# Convert 'DEW_POINT' to numeric
+data['DEW_POINT'] = pd.to_numeric(data['DEW_POINT'], errors='coerce')
+
+# Drop rows with null values
+data = data.dropna()
+
+# Convert categorical variables to numeric using one-hot encoding
+categorical_vars = ['TAIL_NUM','OP_UNIQUE_CARRIER', 'DEST', 'Condition', 'Wind']
+data = pd.get_dummies(data, columns=categorical_vars, drop_first=True)
+
+# Define the target variable
+data['IS_DELAY'] = (data['DEP_DELAY'] > 15).astype(int)
+
+print("First 5 rows of the dataset:")
+print(data.head())
+
+# Select features and target variable
+features = data.drop(columns=['DEP_DELAY', 'IS_DELAY'])
+target = data['IS_DELAY']
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=100)
+
+# Train the Decision Tree model
+dt_model = DecisionTreeClassifier(random_state=100)
+dt_model.fit(X_train, y_train)
+
+# Predict on the test set
+dt_y_pred = dt_model.predict(X_test)
+
+# Train the KNN model
+knn_model = KNeighborsClassifier(n_neighbors=6)
+knn_model.fit(X_train, y_train)
+
+# Predict on the test set
+knn_y_pred = knn_model.predict(X_test)
+
+# Evaluate the models
+models = {
+    'Decision Tree': dt_y_pred,
+    'KNN': knn_y_pred
+}
+
+scores = {
+    'Accuracy': accuracy_score,
+    'Precision': lambda y_true, y_pred: precision_score(y_true, y_pred, average='weighted'),
+    'Recall': lambda y_true, y_pred: recall_score(y_true, y_pred, average='weighted'),
+    'F1 Score': lambda y_true, y_pred: f1_score(y_true, y_pred, average='weighted')
+}
+
+results = {model: {metric: func(y_test, preds) for metric, func in scores.items()} for model, preds in models.items()}
+
+# Plot the results
+metrics = list(scores.keys())
+x = range(len(metrics))
+
+fig, ax = plt.subplots()
+bar_width = 0.35
+
+dt_scores = [results['Decision Tree'][metric] for metric in metrics]
+knn_scores = [results['KNN'][metric] for metric in metrics]
+
+for model, scores in results.items():
+    print(f'\n{model}:')
+    for metric, score in scores.items():
+        print(f'{metric}: {score:.4f}')
+
+ax.bar(x, dt_scores, width=bar_width, label='Decision Tree',color='blue')
+ax.bar([p + bar_width for p in x], knn_scores, width=bar_width, label='KNN',color='green')
+
+ax.set_xlabel('Metrics')
+ax.set_ylabel('Scores')
+ax.set_title('Comparison of Decision Tree and KNN Models')
+ax.set_xticks([p + bar_width / 2 for p in x])
+ax.set_xticklabels(metrics)
+ax.legend()
+
+plt.tight_layout()
+plt.show()
